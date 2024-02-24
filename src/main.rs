@@ -22,7 +22,7 @@ fn main() {
     println!("without selection: {:?}", res);
     // Feature selection using the genetic algorithm
     // Assuming run_ga expects Arc-wrapped dataset and model, and returns results or updates state in-place
-    run_ga::<BreastCancerData>(data_arc, ModelName::LinearRegression);
+    run_ga::<BreastCancerData>(data_arc, ModelName::LinearRegression, Default::default());
 
     // Depending on your implementation of run_ga, you may wish to retrieve and display results here.
     // For example, if run_ga mutates the model or has side effects you wish to inspect...

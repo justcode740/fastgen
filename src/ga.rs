@@ -3,14 +3,14 @@ extern crate rand;
 extern crate smartcore;
 
 use core::num;
-use std::{any::Any, iter::Sum, sync::Arc};
+use std::{any::Any, arch::global_asm, iter::Sum, sync::Arc};
 
 use rand::Rng;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 use smartcore::{linear::linear_regression::LinearRegression, metrics::mean_squared_error};
 
 
-use crate::{data::{self, DataSet}, model::{LinearRegressionModel, Model, ModelName}};
+use crate::{config::GaConfig, data::{self, DataSet}, model::{LinearRegressionModel, Model, ModelName}};
 
 #[derive(Clone, Debug)]
 pub struct Individual {
@@ -91,14 +91,14 @@ where
 }
 
 
-pub fn run_ga<D>(dataset: Arc<D>, model: ModelName)
+pub fn run_ga<D>(dataset: Arc<D>, model: ModelName, gaconfig: GaConfig)
 where
     D: DataSet + Sync + Send, // Ensure the dataset is Sync to be shared across threads.
     f32: Sum<<D as DataSet>::Input>// Model needs to be Cloneable and Send to be used in parallel.
 {
     let num_features = dataset.dimension().1;
-    let population_size = 50;
-    let generations = 20;
+    let population_size = gaconfig.populaton_size;
+    let generations = gaconfig.generations;
 
     let mut population: Vec<Individual> = (0..population_size)
         .map(|_| Individual::new(num_features))
