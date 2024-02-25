@@ -1,16 +1,27 @@
-extern crate rayon;
 extern crate rand;
+extern crate rayon;
 extern crate smartcore;
 
 use core::num;
-use std::{any::Any, arch::global_asm, cell::RefCell, iter::Sum, sync::{Arc, Mutex}};
+use std::{
+    any::Any,
+    arch::global_asm,
+    cell::RefCell,
+    iter::Sum,
+    sync::{Arc, Mutex},
+};
 
 use rand::Rng;
-use rayon::iter::{IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
+use rayon::iter::{
+    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator,
+};
 use smartcore::{linear::linear_regression::LinearRegression, metrics::mean_squared_error};
 
-
-use crate::{config::GaConfig, data::{self, DataSet}, model::{LinearRegressionModel, Model, ModelName}};
+use crate::{
+    config::GaConfig,
+    data::{self, DataSet},
+    model::{LinearRegressionModel, Model, ModelName},
+};
 
 #[derive(Clone, Debug)]
 pub struct Individual {
@@ -50,12 +61,12 @@ pub fn evaluate_fitness<D>(individual: &Individual, dataset: &D, model: ModelNam
 where
     D: DataSet, // DataSet trait is assumed to provide select_columns and target methods.
     D::Input: std::ops::Sub<Output = D::Input>,
-    f32: Sum<<D as DataSet>::Input> // Model trait as defined previously.
+    f32: Sum<<D as DataSet>::Input>, // Model trait as defined previously.
 {
     match model {
         ModelName::LinearRegression => {
-             // Select features based on the individual's characteristics
-             if let Some(x_selected) = dataset.select_columns(&individual.features) {
+            // Select features based on the individual's characteristics
+            if let Some(x_selected) = dataset.select_columns(&individual.features) {
                 // Prepare the target data from the dataset
                 let actual = dataset.target(); // Assuming this returns Vec<f64>, matching the DataSet trait
 
@@ -66,36 +77,30 @@ where
                 if let Ok(predictions) = lr.predict(&x_selected) {
                     // Evaluate the model's predictions against the actual outcomes
                     let mse: f32 = actual
-                    .iter()
-                    .zip(predictions.iter())
-                    .map(|(a, p)| (*a - *p) * (*a - *p)) // Subtracting actual from predicted values
-                    .sum::<f32>()
-                    / actual.len() as f32;
+                        .iter()
+                        .zip(predictions.iter())
+                        .map(|(a, p)| (*a - *p) * (*a - *p)) // Subtracting actual from predicted values
+                        .sum::<f32>()
+                        / actual.len() as f32;
                     return -mse;
-                    
                 }
 
                 // // Attempt to fit the model with the selected features and the actual outcomes
                 // if lr.fit().is_ok() {
-                    
+
                 // }
             }
             0.0 // Default return value in case of any failure
-            
-        },
+        }
         _ => panic!(""),
     }
-
-
-   
 }
-
 
 pub fn run_ga<D>(dataset: Arc<D>, model: ModelName, gaconfig: GaConfig) -> Individual
 where
     D: DataSet + Sync + Send, // Ensure the dataset is Sync to be shared across threads.
-    f32: Sum<<D as DataSet>::Input> // Model needs to be Cloneable and Send to be used in parallel.
- {
+    f32: Sum<<D as DataSet>::Input>, // Model needs to be Cloneable and Send to be used in parallel.
+{
     let num_features = dataset.dimension().1;
     let population_size = gaconfig.populaton_size;
     let generations = gaconfig.generations;
@@ -108,16 +113,20 @@ where
         population.par_iter_mut().for_each(|individual| {
             // Initialize a new model for each thread/individual.
             // let mut model_instance = model.clone();
-        
+
             // Dereference the Arc to get a shared reference to the dataset (D).
             let dataset_ref = Arc::as_ref(&dataset);
-        
+
             // Pass the new model instance and the dataset reference to `evaluate_fitness`.
             individual.fitness = evaluate_fitness::<D>(individual, dataset_ref, model.clone());
         });
 
         // Sort the population by fitness, keep the best half, and mutate to form a new generation.
-        population.sort_by(|a, b| b.fitness.partial_cmp(&a.fitness).unwrap_or(std::cmp::Ordering::Equal));
+        population.sort_by(|a, b| {
+            b.fitness
+                .partial_cmp(&a.fitness)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         let survivors = population.split_off(population_size / 2);
         let mut new_generation = survivors.clone();
         new_generation.iter_mut().for_each(|individual| {
@@ -133,7 +142,6 @@ where
     best_individual.clone()
 }
 
-
 pub fn run_ga_cross_validation<D>(
     dataset: Arc<D>,
     model: ModelName,
@@ -142,7 +150,7 @@ pub fn run_ga_cross_validation<D>(
 ) -> (f32, Vec<bool>)
 where
     D: DataSet + Sync + Send,
-    f32: Sum<<D as DataSet>::Input> 
+    f32: Sum<<D as DataSet>::Input>,
 {
     let num_samples = dataset.dimension().0;
     let total_mse = Arc::new(Mutex::new(0.0));
@@ -162,7 +170,6 @@ where
         println!("train set {:?}", train_set.dimension());
         println!("valid set {:?}", valid_set.dimension());
         // println!("valida {}", valid_set.data().data.len());
-
 
         let best_individual = run_ga(Arc::new(train_set), model.clone(), gaconfig.clone());
         println!("reach or not??");

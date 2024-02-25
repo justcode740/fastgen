@@ -6,6 +6,9 @@ pub struct GaConfig {
 
 impl Default for GaConfig {
     fn default() -> Self {
-        Self { populaton_size: 50, generations:50 }
+        Self {
+            populaton_size: 50,
+            generations: 50,
+        }
     }
 }

@@ -1,4 +1,8 @@
-use smartcore::{dataset::{breast_cancer, Dataset}, linalg::{naive::dense_matrix::DenseMatrix, BaseMatrix}, math::num::RealNumber};
+use smartcore::{
+    dataset::{breast_cancer, Dataset},
+    linalg::{naive::dense_matrix::DenseMatrix, BaseMatrix},
+    math::num::RealNumber,
+};
 use std::{mem, process::Output};
 use sys_info;
 pub trait DataSet {
@@ -15,14 +19,18 @@ pub trait DataSet {
     fn size(&self) -> usize;
     fn fit_in_memory(&self) -> bool;
     fn target(&self) -> Vec<Self::Input>;
-    fn select_columns(&self, column_selector: &[bool]) -> Option<DenseMatrix<Self::Input>> where <Self as DataSet>::Input: RealNumber;
+    fn select_columns(&self, column_selector: &[bool]) -> Option<DenseMatrix<Self::Input>>
+    where
+        <Self as DataSet>::Input: RealNumber;
 
-    fn split_for_cross_validation(&self, k_folds: usize, fold: usize) -> (Self, Self) where Self: Sized;
+    fn split_for_cross_validation(&self, k_folds: usize, fold: usize) -> (Self, Self)
+    where
+        Self: Sized;
 
     // fn data(&self) -> Self::DataSetType;
 }
 pub struct BreastCancerData {
-    data: Dataset<f32, f32>
+    data: Dataset<f32, f32>,
 }
 
 impl DataSet for BreastCancerData {
@@ -32,9 +40,8 @@ impl DataSet for BreastCancerData {
 
     fn default() -> Self {
         BreastCancerData {
-            data: breast_cancer::load_dataset()
+            data: breast_cancer::load_dataset(),
         }
-        
     }
 
     fn features(&self) -> Vec<String> {
@@ -43,7 +50,10 @@ impl DataSet for BreastCancerData {
 
     // (m, n)
     fn dimension(&self) -> (usize, usize) {
-        (self.data.num_samples.clone(), self.data.num_features.clone())
+        (
+            self.data.num_samples.clone(),
+            self.data.num_features.clone(),
+        )
     }
 
     // estimate bytes of dataset
@@ -70,18 +80,18 @@ impl DataSet for BreastCancerData {
             .enumerate()
             .filter_map(|(index, &feature)| if feature { Some(index) } else { None })
             .collect();
-    
+
         if selected_features.is_empty() {
             return None;
         }
-    
+
         let (m, _) = self.dimension(); // Original number of rows
-    
+
         // Calculate the correct number of columns after selection
         let ncols = selected_features.len();
-    
+
         let mut x_selected_data: Vec<f32> = Vec::with_capacity(m * ncols);
-    
+
         for row in 0..m {
             for &col in &selected_features {
                 let index = row * self.dimension().1 + col; // Calculate the flat index
@@ -94,10 +104,9 @@ impl DataSet for BreastCancerData {
                 }
             }
         }
-    
+
         Some(DenseMatrix::from_vec(m, ncols, &x_selected_data))
     }
-    
 
     fn target(&self) -> Vec<Self::Input> {
         self.data.target.clone()
@@ -109,7 +118,7 @@ impl DataSet for BreastCancerData {
         let remainder = num_samples % k_folds;
         let start_idx;
         let mut end_idx;
-    
+
         // Adjust start and end index for each fold to distribute remainder samples
         if fold < remainder {
             // Folds that receive an extra sample
@@ -120,43 +129,89 @@ impl DataSet for BreastCancerData {
             start_idx = fold * fold_size + remainder;
             end_idx = start_idx + fold_size;
         }
-    
+
         // Ensuring the end index does not exceed the total number of samples
         end_idx = end_idx.min(num_samples);
-    
+
         // Create training dataset by excluding the range dedicated to the validation set
         let train_data = BreastCancerData {
             data: Dataset {
-                data: self.data.data.iter().enumerate().filter_map(|(i, x)| if i < start_idx || i >= end_idx { Some(*x) } else { None }).collect(),
-                target: self.data.target.iter().enumerate().filter_map(|(i, x)| if i < start_idx || i >= end_idx { Some(*x) } else { None }).collect(),
+                data: self
+                    .data
+                    .data
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, x)| {
+                        if i < start_idx || i >= end_idx {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+                target: self
+                    .data
+                    .target
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, x)| {
+                        if i < start_idx || i >= end_idx {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
                 feature_names: self.data.feature_names.clone(),
                 target_names: self.data.target_names.clone(),
                 description: self.data.description.clone(),
                 num_samples: num_samples - (end_idx - start_idx), // Update based on excluded validation range
                 num_features,
-            }
+            },
         };
-    
+
         // Create validation dataset from the specified range
         let valid_data = BreastCancerData {
             data: Dataset {
-                data: self.data.data.iter().enumerate().filter_map(|(i, x)| if i >= start_idx && i < end_idx { Some(*x) } else { None }).collect(),
-                target: self.data.target.iter().enumerate().filter_map(|(i, x)| if i >= start_idx && i < end_idx { Some(*x) } else { None }).collect(),
+                data: self
+                    .data
+                    .data
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, x)| {
+                        if i >= start_idx && i < end_idx {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+                target: self
+                    .data
+                    .target
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(i, x)| {
+                        if i >= start_idx && i < end_idx {
+                            Some(*x)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
                 feature_names: self.data.feature_names.clone(),
                 target_names: self.data.target_names.clone(),
                 description: self.data.description.clone(),
                 num_samples: end_idx - start_idx, // Direct calculation for the validation range
                 num_features,
-            }
+            },
         };
-    
+
         (train_data, valid_data)
     }
-    
 
     // debug
     // fn data(&self) -> Self::DataSetType {
     //    self.data
     // }
-    
 }

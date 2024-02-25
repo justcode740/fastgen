@@ -1,7 +1,10 @@
-use std::{ sync::Arc};
 use fastgen::{
-    config::GaConfig, data::{BreastCancerData, DataSet}, ga::{evaluate_fitness, run_ga, run_ga_cross_validation, Individual}, model::{LinearRegressionModel, Model, ModelName}
+    config::GaConfig,
+    data::{BreastCancerData, DataSet},
+    ga::{evaluate_fitness, run_ga, run_ga_cross_validation, Individual},
+    model::{LinearRegressionModel, Model, ModelName},
 };
+use std::sync::Arc;
 
 // Ensure run_ga is imported or accessible here
 // use fastgen::run_ga;
@@ -20,7 +23,12 @@ fn main() {
 
     // Run GA with cross-validation
     let k_folds = 2; // Number of folds for cross-validation
-    let (avg_mse, best_features) = run_ga_cross_validation(data_arc.clone(), ModelName::LinearRegression, ga_config, k_folds);
+    let (avg_mse, best_features) = run_ga_cross_validation(
+        data_arc.clone(),
+        ModelName::LinearRegression,
+        ga_config,
+        k_folds,
+    );
 
     println!("Average MSE across {} folds: {}", k_folds, avg_mse);
     println!("Best feature selection: {:?}", best_features);
@@ -34,8 +42,13 @@ fn main() {
     // Assuming a conceptual split, replace with actual logic as per your dataset's implementation
     let validation_fold = 0; // Use the first fold as a proxy for validation
     let (train_set, valid_set) = data_arc.split_for_cross_validation(k_folds, validation_fold);
-    let validation_mse = evaluate_fitness::<BreastCancerData>(&individual, &Arc::new(valid_set), ModelName::LinearRegression);
-    println!("Validation set MSE (Benchmark, no feature selection): {}", validation_mse);
+    let validation_mse = evaluate_fitness::<BreastCancerData>(
+        &individual,
+        &Arc::new(valid_set),
+        ModelName::LinearRegression,
+    );
+    println!(
+        "Validation set MSE (Benchmark, no feature selection): {}",
+        validation_mse
+    );
 }
-
-

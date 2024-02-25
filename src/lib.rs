@@ -1,5 +1,5 @@
-pub mod model;
+pub mod config;
 pub mod data;
 pub mod ga;
-pub mod config;
+pub mod model;
 pub mod viz;
