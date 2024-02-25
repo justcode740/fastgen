@@ -33,8 +33,26 @@ This library is designed to offer a blazing-fast, generic solution for automated
 - **User Interface Enhancements**: Develop a more user-friendly CLI and output system, making the library more accessible and easier to use for a broader audience.
 - **Frontend Visualization**: Explore the creation of a frontend interface to visualize the feature and model selection process, offering users insight into the decision-making behind the scenes.
 
-## Getting Involved
-Contributions to this project are highly welcome. We value a modular, contributor-friendly approach that allows for easy integration and testing of new features, models, and data sources. Whether you're looking to fix bugs, propose new features, or enhance the documentation, your input is invaluable. Check out our issues list for areas where you can help, or feel free to suggest new ideas for the project.
+## Modularity and Contributor Friendliness
+
+Our library is built with **modularity** and **contributor friendliness** at its core. We believe that a modular design not only facilitates easier understanding and use of the software but also encourages community contributions by making it straightforward to add new features, models, or datasets.
+
+### Why Modularity Matters
+
+- **Ease of Use**: Modular components can be easily mixed and matched to suit specific needs, making the library versatile and adaptable.
+- **Ease of Contribution**: With clear boundaries and interfaces between components, new contributors can easily understand where and how to add their contributions without having to navigate through a monolithic codebase.
+
+### Contributing
+
+We warmly welcome contributions of all forms:
+
+- **Adding New Models or Features**: Enhance the library by integrating new machine learning models or introducing novel features.
+- **Improving Existing Modules**: Contribute by refining the algorithms, optimizing performance, or enhancing the user experience.
+- **Expanding Dataset Support**: Help by adding support for more datasets, improving data loading mechanisms, or contributing datasets.
+- **Documentation and Examples**: Assist new users by improving documentation, adding tutorials, or providing example use cases.
+
+Check out our [Contribution Guidelines](CONTRIBUTION.md) for more information on how to get started. Whether you're fixing a bug or proposing a new feature, your contributions are invaluable to making this project better for everyone.
 
 ## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+
+This project is licensed under the [MIT License](LICENSE). For more details, see the LICENSE file in the root directory.
