@@ -2,28 +2,24 @@ extern crate rand;
 extern crate rayon;
 extern crate smartcore;
 
-use core::num;
 use std::{
-    any::Any,
-    arch::global_asm,
-    cell::RefCell,
     iter::Sum,
     sync::{Arc, Mutex},
 };
 
 use rand::Rng;
 use rayon::iter::{
-    IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator,
+     IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator,
 };
 use smartcore::{
     ensemble::random_forest_regressor::RandomForestRegressor,
-    linear::linear_regression::LinearRegression, metrics::mean_squared_error,
+    linear::linear_regression::LinearRegression
 };
 
 use crate::{
     config::GaConfig,
-    data::{self, DataSet},
-    model::{LinearRegressionModel, Model, ModelName},
+    data::DataSet,
+    model::ModelName,
 };
 
 #[derive(Clone, Debug)]
