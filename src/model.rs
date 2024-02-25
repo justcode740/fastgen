@@ -7,7 +7,7 @@ use smartcore::{
 
 #[derive(Clone)]
 pub enum ModelName {
-    LinearRegression
+    LinearRegression,
 }
 
 use crate::data::DataSet;
