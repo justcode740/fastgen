@@ -15,7 +15,10 @@ use rand::Rng;
 use rayon::iter::{
     IndexedParallelIterator, IntoParallelIterator, IntoParallelRefMutIterator, ParallelIterator,
 };
-use smartcore::{ensemble::random_forest_regressor::RandomForestRegressor, linear::linear_regression::LinearRegression, metrics::mean_squared_error};
+use smartcore::{
+    ensemble::random_forest_regressor::RandomForestRegressor,
+    linear::linear_regression::LinearRegression, metrics::mean_squared_error,
+};
 
 use crate::{
     config::GaConfig,
@@ -91,11 +94,12 @@ where
                 // }
             }
             0.0 // Default return value in case of any failure
-        },
+        }
         ModelName::DecisionTreeRegressor => {
             if let Some(x_selected) = dataset.select_columns(&individual.features) {
                 let actual = dataset.target();
-                let dt = RandomForestRegressor::fit(&x_selected, &actual, Default::default()).unwrap();
+                let dt =
+                    RandomForestRegressor::fit(&x_selected, &actual, Default::default()).unwrap();
                 if let Ok(predictions) = dt.predict(&x_selected) {
                     let mse: f32 = actual
                         .iter()
@@ -107,7 +111,7 @@ where
                 }
             }
             0.0 // Default return value in case of any failure
-        },
+        }
         // Add cases for other models here
         _ => panic!("Model not supported"),
     }

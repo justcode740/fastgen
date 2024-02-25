@@ -53,14 +53,13 @@ use std::{sync::Arc, time::Instant};
 //     );
 // }
 
-
 // Assuming all the necessary modules and structs (BreastCancerData, GaConfig, ModelName, Individual, run_ga_cross_validation, evaluate_fitness) are imported and available.
 
 fn main() {
     // Load data
     let data = BreastCancerData::default();
     let data_arc = Arc::new(data);
-    
+
     // Define GA configuration
     let ga_config = GaConfig {
         generations: 100,
@@ -70,22 +69,18 @@ fn main() {
 
     // Define the number of folds for cross-validation
     let k_folds = 2;
-    
+
     // Define models to evaluate
     let models = vec![
         ModelName::LinearRegression,
         ModelName::DecisionTreeRegressor, // Make sure this matches your ModelName enum
     ];
-    
+
     for model in models {
         // Time the GA for feature selection
         let ga_start_time = Instant::now();
-        let (ga_mse, best_features) = run_ga_cross_validation(
-            data_arc.clone(),
-            model.clone(),
-            ga_config.clone(),
-            k_folds,
-        );
+        let (ga_mse, best_features) =
+            run_ga_cross_validation(data_arc.clone(), model.clone(), ga_config.clone(), k_folds);
         let ga_time = ga_start_time.elapsed();
         let num_features_selected_by_ga = best_features.iter().filter(|&&f| f).count(); // Count the features selected by GA
 
@@ -93,12 +88,8 @@ fn main() {
         let num_features = data_arc.dimension().1;
         let individual = Individual::new_all_true(num_features); // All features are true for the baseline
         let (train_set, valid_set) = data_arc.split_for_cross_validation(k_folds, 0);
-        let baseline_mse = evaluate_fitness(
-            &individual,
-            &valid_set,
-            model.clone(),
-        );
-        
+        let baseline_mse = evaluate_fitness(&individual, &valid_set, model.clone());
+
         // Print out GA time, GA MSE, Baseline MSE, and number of features
         println!("Model: {:?}, GA Time: {:?}, GA MSE: {}, Baseline MSE: {}, Features (Baseline/GA): {}/{}",
                  model, ga_time, ga_mse, baseline_mse, num_features, num_features_selected_by_ga);

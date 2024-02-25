@@ -1,9 +1,7 @@
 use smartcore::{
-    linalg::naive::dense_matrix::DenseMatrix,
-    linear::linear_regression::{LinearRegression},
+    linalg::naive::dense_matrix::DenseMatrix, linear::linear_regression::LinearRegression,
+    math::num::RealNumber, metrics::mean_squared_error,
     tree::decision_tree_regressor::DecisionTreeRegressor,
-    math::num::RealNumber,
-    metrics::mean_squared_error,
 };
 
 #[derive(Clone, Debug)]
