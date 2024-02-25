@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct GaConfig {
     pub populaton_size: usize,
     pub generations: i32,

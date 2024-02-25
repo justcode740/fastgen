@@ -4,6 +4,7 @@ use sys_info;
 pub trait DataSet {
     type Output;
     type Input: RealNumber + std::ops::Sub<Output = Self::Input>;
+    // Internal dataset type that should be generic, it should be able to support many different concrete data representations and be agnostic to user
     type DataSetType;
 
     // all dataset but underlying the hood is operated on smartcore::DenseMatrix for local dataset
@@ -15,6 +16,10 @@ pub trait DataSet {
     fn fit_in_memory(&self) -> bool;
     fn target(&self) -> Vec<Self::Input>;
     fn select_columns(&self, column_selector: &[bool]) -> Option<DenseMatrix<Self::Input>> where <Self as DataSet>::Input: RealNumber;
+
+    fn split_for_cross_validation(&self, k_folds: usize, fold: usize) -> (Self, Self) where Self: Sized;
+
+    // fn data(&self) -> Self::DataSetType;
 }
 pub struct BreastCancerData {
     data: Dataset<f32, f32>
@@ -60,39 +65,98 @@ impl DataSet for BreastCancerData {
     }
 
     fn select_columns(&self, column_selector: &[bool]) -> Option<DenseMatrix<Self::Input>> {
-        // Filter out the indices of features that are selected (1)
         let selected_features: Vec<usize> = column_selector
-        .iter()
-        .enumerate()
-        .filter_map(|(index, &feature)| if feature { Some(index) } else { None })
-        .collect();
-
-        // Early return if no features are selected
+            .iter()
+            .enumerate()
+            .filter_map(|(index, &feature)| if feature { Some(index) } else { None })
+            .collect();
+    
         if selected_features.is_empty() {
             return None;
         }
-        let (m, n) = self.dimension();
-
-        let x = DenseMatrix::from_array(m, n, &self.data.data);
-
-        // Collect selected columns' values into a Vec<f32> and then create a new DenseMatrix
-        let ncols = selected_features.len(); // Number of selected columns
-
+    
+        let (m, _) = self.dimension(); // Original number of rows
+    
+        // Calculate the correct number of columns after selection
+        let ncols = selected_features.len();
+    
         let mut x_selected_data: Vec<f32> = Vec::with_capacity(m * ncols);
-
+    
         for row in 0..m {
             for &col in &selected_features {
-                x_selected_data.push(x.get(row, col));
+                let index = row * self.dimension().1 + col; // Calculate the flat index
+                if index < self.data.data.len() {
+                    x_selected_data.push(self.data.data[index]);
+                } else {
+                    // Handle or log the error if the index is out of bounds
+                    // For simplicity, you might add a dummy value, log an error, or skip
+                    x_selected_data.push(0.0); // Adding a dummy value as a placeholder
+                }
             }
         }
-
-        // Create a new DenseMatrix with the selected features
-        Some(
-            DenseMatrix::from_vec(m, ncols, &x_selected_data)
-        )
+    
+        Some(DenseMatrix::from_vec(m, ncols, &x_selected_data))
     }
+    
 
     fn target(&self) -> Vec<Self::Input> {
         self.data.target.clone()
     }
+
+    fn split_for_cross_validation(&self, k_folds: usize, fold: usize) -> (Self, Self) {
+        let (num_samples, num_features) = self.dimension();
+        let fold_size = num_samples / k_folds;
+        let remainder = num_samples % k_folds;
+        let start_idx;
+        let mut end_idx;
+    
+        // Adjust start and end index for each fold to distribute remainder samples
+        if fold < remainder {
+            // Folds that receive an extra sample
+            start_idx = fold * (fold_size + 1);
+            end_idx = start_idx + fold_size + 1;
+        } else {
+            // Folds with the regular number of samples
+            start_idx = fold * fold_size + remainder;
+            end_idx = start_idx + fold_size;
+        }
+    
+        // Ensuring the end index does not exceed the total number of samples
+        end_idx = end_idx.min(num_samples);
+    
+        // Create training dataset by excluding the range dedicated to the validation set
+        let train_data = BreastCancerData {
+            data: Dataset {
+                data: self.data.data.iter().enumerate().filter_map(|(i, x)| if i < start_idx || i >= end_idx { Some(*x) } else { None }).collect(),
+                target: self.data.target.iter().enumerate().filter_map(|(i, x)| if i < start_idx || i >= end_idx { Some(*x) } else { None }).collect(),
+                feature_names: self.data.feature_names.clone(),
+                target_names: self.data.target_names.clone(),
+                description: self.data.description.clone(),
+                num_samples: num_samples - (end_idx - start_idx), // Update based on excluded validation range
+                num_features,
+            }
+        };
+    
+        // Create validation dataset from the specified range
+        let valid_data = BreastCancerData {
+            data: Dataset {
+                data: self.data.data.iter().enumerate().filter_map(|(i, x)| if i >= start_idx && i < end_idx { Some(*x) } else { None }).collect(),
+                target: self.data.target.iter().enumerate().filter_map(|(i, x)| if i >= start_idx && i < end_idx { Some(*x) } else { None }).collect(),
+                feature_names: self.data.feature_names.clone(),
+                target_names: self.data.target_names.clone(),
+                description: self.data.description.clone(),
+                num_samples: end_idx - start_idx, // Direct calculation for the validation range
+                num_features,
+            }
+        };
+    
+        (train_data, valid_data)
+    }
+    
+
+    // debug
+    // fn data(&self) -> Self::DataSetType {
+    //    self.data
+    // }
+    
 }
