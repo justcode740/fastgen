@@ -1,13 +1,15 @@
 use smartcore::{
     linalg::naive::dense_matrix::DenseMatrix,
-    linear::linear_regression::{LinearRegression, LinearRegressionParameters},
+    linear::linear_regression::{LinearRegression},
+    tree::decision_tree_regressor::DecisionTreeRegressor,
     math::num::RealNumber,
     metrics::mean_squared_error,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum ModelName {
     LinearRegression,
+    DecisionTreeRegressor,
 }
 
 use crate::data::DataSet;
