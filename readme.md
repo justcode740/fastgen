@@ -3,10 +3,11 @@
 This library is designed to offer a blazing-fast, generic solution for automated feature and model selection, tailored for large datasets. By leveraging the power of Rust's parallelism and abstraction, alongside advanced model selection techniques, it streamlines the process of preparing data and choosing the optimal machine learning model with the best feature sets for your needs.
 
 ## Experiment run
-| Model               | GA Time (s)    | GA MSE      | Baseline MSE | Features (Baseline/GA) |
-|---------------------|----------------|-------------|--------------|------------------------|
-| LinearRegression    | 16.51424405    | -0.20968826 | -0.24114878  | 30/16                  |
-| DecisionTreeRegressor | 150.815264143 | -0.2097171  | -0.2413631   | 30/12                  |
+| Model                | GA Time (s)    | GA MSE      | Baseline MSE | Features (Baseline/GA) | Generations | Population Size | k-Folds |
+|----------------------|----------------|-------------|--------------|------------------------|-------------|-----------------|---------|
+| LinearRegression     | 16.51424405    | -0.20968826 | -0.24114878  | 30/16                  | 100         | 50              | 2       |
+| DecisionTreeRegressor| 150.815264143  | -0.2097171  | -0.2413631   | 30/12                  | 100         | 50              | 2       |
+
 
 ## Key Features
 
